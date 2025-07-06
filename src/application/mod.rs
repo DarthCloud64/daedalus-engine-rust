@@ -43,6 +43,7 @@ impl Application {
             input_service: None,
         }
     }
+
     fn setup_scene(&mut self) {
         self.scene = Some(Scene::new());
         let scene = self.scene.as_mut().unwrap();
@@ -75,8 +76,11 @@ impl Application {
         );
     }
 
-    fn update_services(&self) {
-        todo!("Update services as needed");
+    fn update_services(&mut self) {
+        self.rendering_service
+            .as_mut()
+            .unwrap()
+            .update_camera_uniform(self.scene.as_ref().unwrap());
     }
 
     fn present(&mut self) {
@@ -150,6 +154,7 @@ impl ApplicationHandler for Application {
     }
 
     fn about_to_wait(&mut self, _: &ActiveEventLoop) {
+        self.update_services();
         self.window.as_ref().unwrap().request_redraw();
     }
 

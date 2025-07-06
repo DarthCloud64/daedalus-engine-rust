@@ -14,7 +14,10 @@ use wgpu::{
 use winit::window::Window;
 
 use crate::{
-    ecs::component::{camera::CameraComponent, transform::TransformComponent},
+    ecs::{
+        component::{camera::CameraComponent, transform::TransformComponent},
+        entity::scene::Scene,
+    },
     rendering::{camera::CameraUniform, vertex::Vertex},
 };
 
@@ -240,6 +243,28 @@ impl RenderingService {
             camera_buffer: camera_buffer,
             camera_bind_group: camera_bind_group,
         })
+    }
+
+    pub fn update_camera_uniform(&mut self, scene: &Scene) {
+        let main_camera_component = scene.camera_components.get(&1).unwrap();
+        let main_transform_component = scene.transform_components.get(&1).unwrap();
+
+        debug!(
+            "Updating camera uniform with camera: {:?} and transform: {:?}",
+            main_camera_component, main_transform_component
+        );
+
+        self.camera_uniform
+            .update_view_projection_matrix(main_camera_component, main_transform_component);
+
+        // In order for the shader to use the updated camera uniform,
+        // we need to write the updated data to the camera buffer.
+        // Offset 0 says to overwrite the entire buffer.
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[self.camera_uniform]),
+        );
     }
 
     pub fn resize_surface(&mut self, width: u32, height: u32) {
