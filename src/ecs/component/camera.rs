@@ -27,7 +27,12 @@ impl CameraComponent {
         // Moves the world to be at the position the camera is looking at
         let view_matrix = Mat4::look_at_rh(
             transform_component.position,
-            self.look_at,
+            self.look_at
+                + Vec3::new(
+                    transform_component.position.x,
+                    transform_component.position.y,
+                    0.0,
+                ),
             self.up_orientation,
         );
 
