@@ -7,6 +7,7 @@ use crate::application::Application;
 mod application;
 mod ecs;
 mod input;
+mod physics;
 mod rendering;
 
 #[pollster::main]

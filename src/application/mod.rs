@@ -1,6 +1,6 @@
 use glam::Vec3;
 use log::{info, trace, warn};
-use std::sync::Arc;
+use std::{sync::Arc, time::Instant};
 use wgpu::SurfaceError;
 use winit::{
     application::ApplicationHandler,
@@ -14,11 +14,13 @@ use winit::{
 use crate::{
     ecs::{
         component::{
-            camera::CameraComponent, input::InputComponent, transform::TransformComponent,
+            camera::CameraComponent, input::InputComponent, physics::PhysicsComponent,
+            transform::TransformComponent,
         },
         entity::scene::Scene,
     },
     input::InputService,
+    physics::PhysicsService,
     rendering::RenderingService,
 };
 
@@ -30,6 +32,8 @@ pub struct Application {
     scene: Option<Scene>,
     rendering_service: Option<RenderingService>,
     input_service: Option<InputService>,
+    physics_service: Option<PhysicsService>,
+    last_frame: Option<Instant>,
 }
 
 impl Application {
@@ -41,6 +45,8 @@ impl Application {
             scene: None,
             rendering_service: None,
             input_service: None,
+            physics_service: None,
+            last_frame: Some(Instant::now()),
         }
     }
 
@@ -64,6 +70,14 @@ impl Application {
                 z_far_field: 100.0,
             },
         );
+        scene.physics_components.insert(
+            test_entity,
+            PhysicsComponent {
+                velocity: Vec3::ZERO,
+                acceleration: Vec3::ZERO,
+                speed: 5.0, // Default speed
+            },
+        );
         scene.transform_components.insert(
             test_entity,
             TransformComponent {
@@ -76,7 +90,12 @@ impl Application {
         );
     }
 
-    fn update_services(&mut self) {
+    fn update_services(&mut self, delta_time: f32) {
+        self.physics_service
+            .as_mut()
+            .unwrap()
+            .handle_physics(self.scene.as_mut().unwrap(), delta_time);
+
         self.rendering_service
             .as_mut()
             .unwrap()
@@ -147,6 +166,8 @@ impl ApplicationHandler for Application {
 
         self.input_service = Some(InputService::new());
 
+        self.physics_service = Some(PhysicsService::new());
+
         self.rendering_service.as_mut().unwrap().resize_surface(
             self.window.as_ref().unwrap().inner_size().width,
             self.window.as_ref().unwrap().inner_size().height,
@@ -154,7 +175,11 @@ impl ApplicationHandler for Application {
     }
 
     fn about_to_wait(&mut self, _: &ActiveEventLoop) {
-        self.update_services();
+        let now = Instant::now();
+        let delta_time = (now - *self.last_frame.as_ref().unwrap()).as_secs_f32();
+        self.last_frame = Some(now);
+
+        self.update_services(delta_time);
         self.window.as_ref().unwrap().request_redraw();
     }
 

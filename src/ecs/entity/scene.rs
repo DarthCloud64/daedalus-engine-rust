@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::ecs::component::{
-    camera::CameraComponent, input::InputComponent, transform::TransformComponent,
+    camera::CameraComponent, input::InputComponent, physics::PhysicsComponent,
+    transform::TransformComponent,
 };
 
 #[derive(Debug, Default, Clone)]
@@ -10,6 +11,7 @@ pub struct Scene {
     pub transform_components: HashMap<u32, TransformComponent>,
     pub camera_components: HashMap<u32, CameraComponent>,
     pub input_components: HashMap<u32, InputComponent>,
+    pub physics_components: HashMap<u32, PhysicsComponent>,
 }
 
 impl Scene {
@@ -19,6 +21,7 @@ impl Scene {
             transform_components: HashMap::new(),
             camera_components: HashMap::new(),
             input_components: HashMap::new(),
+            physics_components: HashMap::new(),
         }
     }
 
